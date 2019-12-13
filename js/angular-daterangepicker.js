@@ -206,6 +206,7 @@
           });
           el.on('apply.daterangepicker', function(ev, picker) {
             return $scope.$apply(function() {
+              var formatters, idx, viewValue;
               if (opts.singleDatePicker) {
                 if (!picker.startDate) {
                   $scope.model = null;
@@ -219,6 +220,16 @@
                   label: picker.chosenLabel
                 };
               }
+              formatters = modelCtrl.$formatters;
+              idx = formatters.length;
+              viewValue = $scope.model;
+              while (idx--) {
+                viewValue = formatters[idx](viewValue);
+              }
+              modelCtrl.$viewValue = modelCtrl.$$lastCommittedViewValue = viewValue;
+              modelCtrl.$modelValue = $scope.model;
+              modelCtrl.$render();
+              return modelCtrl.$$writeModelToScope();
             });
           });
           el.on('outsideClick.daterangepicker', function(ev, picker) {
