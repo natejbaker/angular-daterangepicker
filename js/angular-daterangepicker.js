@@ -341,7 +341,9 @@
             _init();
             if (newClearable) {
               return el.on('cancel.daterangepicker', function(ev, picker) {
-                if (!picker.cancelingClick) {
+                var modelSet = opts.singleDatePicker ? !!$scope.model :
+                    (!!$scope.model.startDate || !!$scope.model.endDate);
+                if (!picker.cancelingClick && modelSet) {
                   $scope.model = opts.singleDatePicker ? null : {
                     startDate: null,
                     endDate: null
@@ -350,7 +352,19 @@
                 }
                 picker.cancelingClick = null;
                 return $timeout(function() {
-                  return $scope.$apply();
+                  return $scope.$apply(function () {
+                    var formatters, idx, viewValue;
+                    formatters = modelCtrl.$formatters;
+                    idx = formatters.length;
+                    viewValue = $scope.model;
+                    while (idx--) {
+                      viewValue = formatters[idx](viewValue);
+                    }
+                    modelCtrl.$viewValue = modelCtrl.$$lastCommittedViewValue = viewValue;
+                    modelCtrl.$modelValue = $scope.model;
+                    modelCtrl.$render();
+                    return modelCtrl.$$writeModelToScope();
+                  });
                 });
               });
             }
