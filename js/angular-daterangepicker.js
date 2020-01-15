@@ -374,7 +374,7 @@
         $scope.$watch('disabled', function (newDisabled) {
           if (newDisabled) {
             return el.on('show.daterangepicker', function (ev, picker) {
-              return picker.container.hide();
+              return _picker != null ? _picker.remove() : void 0;
             });
           }
         });
