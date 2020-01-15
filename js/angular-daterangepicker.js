@@ -21,6 +21,7 @@
         max: '=',
         picker: '=?',
         model: '=ngModel',
+        disabled: '=ngDisabled',
         opts: '=options',
         clearable: '='
       },
@@ -370,6 +371,13 @@
             }
           });
         }
+        $scope.$watch('disabled', function (newDisabled) {
+          if (newDisabled) {
+            return el.on('show.daterangepicker', function (ev, picker) {
+              return picker.container.hide();
+            });
+          }
+        });
         return $scope.$on('$destroy', function() {
           return _picker != null ? _picker.remove() : void 0;
         });
