@@ -376,6 +376,26 @@
             return el.on('show.daterangepicker', function (ev, picker) {
               return _picker != null ? _picker.remove() : void 0;
             });
+          } else {
+            return el.on('show.daterangepicker', function(ev, picker) {
+              el.addClass('picker-open');
+              return $scope.$apply(function() {
+                if (opts.singleDatePicker) {
+                  if (!picker.startDate.isSame($scope.model)) {
+                    _setStartDate($scope.model);
+                    _setEndDate($scope.model);
+                  }
+                } else {
+                  if ($scope.model && !picker.startDate.isSame($scope.model.startDate)) {
+                    _setStartDate($scope.model.startDate);
+                  }
+                  if ($scope.model && !picker.endDate.isSame($scope.model.endDate)) {
+                    _setEndDate($scope.model.endDate);
+                  }
+                }
+                picker.updateView();
+              });
+            });
           }
         });
         return $scope.$on('$destroy', function() {
