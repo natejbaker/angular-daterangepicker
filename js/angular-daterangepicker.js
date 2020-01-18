@@ -183,25 +183,31 @@
           $scope.picker = _picker;
           _picker.container.hide();
           _picker.container.addClass((opts.pickerClasses || "") + " " + (attrs['pickerClasses'] || ""));
-          el.on('show.daterangepicker', function(ev, picker) {
-            el.addClass('picker-open');
-            return $scope.$apply(function() {
-              if (opts.singleDatePicker) {
-                if (!picker.startDate.isSame($scope.model)) {
-                  _setStartDate($scope.model);
-                  _setEndDate($scope.model);
+          if($scope.disabled) {
+            el.on('show.daterangepicker', function (ev, picker) {
+              return _picker != null ? _picker.remove() : void 0;
+            })
+          } else {
+            el.on('show.daterangepicker', function(ev, picker) {
+              el.addClass('picker-open');
+              return $scope.$apply(function() {
+                if (opts.singleDatePicker) {
+                  if (!picker.startDate.isSame($scope.model)) {
+                    _setStartDate($scope.model);
+                    _setEndDate($scope.model);
+                  }
+                } else {
+                  if ($scope.model && !picker.startDate.isSame($scope.model.startDate)) {
+                    _setStartDate($scope.model.startDate);
+                  }
+                  if ($scope.model && !picker.endDate.isSame($scope.model.endDate)) {
+                    _setEndDate($scope.model.endDate);
+                  }
                 }
-              } else {
-                if ($scope.model && !picker.startDate.isSame($scope.model.startDate)) {
-                  _setStartDate($scope.model.startDate);
-                }
-                if ($scope.model && !picker.endDate.isSame($scope.model.endDate)) {
-                  _setEndDate($scope.model.endDate);
-                }
-              }
-              picker.updateView();
+                picker.updateView();
+              });
             });
-          });
+          }
           el.on('hide.daterangepicker', function(ev, picker) {
             return el.removeClass('picker-open');
           });
@@ -248,6 +254,40 @@
               var eventName;
               eventName = ev.type + '.' + ev.namespace;
               return $scope.$evalAsync(opts.eventHandlers[eventName]);
+            });
+          }
+          if($scope.clearable) {
+            opts = _mergeOpts(opts, {
+              locale: {
+                cancelLabel: opts.locale.clearLabel
+              }
+            });
+            return el.on('cancel.daterangepicker', function (ev, picker) {
+              var modelSet = opts.singleDatePicker ? !!$scope.model :
+                  (!!$scope.model.startDate || !!$scope.model.endDate);
+              if (!picker.cancelingClick && modelSet) {
+                $scope.model = opts.singleDatePicker ? null : {
+                  startDate: null,
+                  endDate: null
+                };
+                el.val("");
+              }
+              picker.cancelingClick = null;
+              return $timeout(function () {
+                return $scope.$apply(function () {
+                  var formatters, idx, viewValue;
+                  formatters = modelCtrl.$formatters;
+                  idx = formatters.length;
+                  viewValue = $scope.model;
+                  while (idx--) {
+                    viewValue = formatters[idx](viewValue);
+                  }
+                  modelCtrl.$viewValue = modelCtrl.$$lastCommittedViewValue = viewValue;
+                  modelCtrl.$modelValue = $scope.model;
+                  modelCtrl.$render();
+                  return modelCtrl.$$writeModelToScope();
+                });
+              });
             });
           }
           modelCtrl.$validate();
@@ -323,6 +363,9 @@
         };
         _initBoundaryField('min', _validateRange, 'startDate', 'minDate');
         _initBoundaryField('max', _validateRange, 'endDate', 'maxDate');
+        $scope.$watch('disabled', function (newDisabled, oldDisabled) {
+          return _init();
+        });
         $scope.$watch('opts', function(newOpts) {
           if (newOpts == null) {
             newOpts = {};
@@ -330,74 +373,6 @@
           opts = _mergeOpts(opts, newOpts);
           return _init();
         }, true);
-        if (attrs.clearable) {
-          $scope.$watch('clearable', function(newClearable) {
-            if (newClearable) {
-              opts = _mergeOpts(opts, {
-                locale: {
-                  cancelLabel: opts.locale.clearLabel
-                }
-              });
-            }
-            _init();
-            if (newClearable) {
-              return el.on('cancel.daterangepicker', function(ev, picker) {
-                var modelSet = opts.singleDatePicker ? !!$scope.model :
-                    (!!$scope.model.startDate || !!$scope.model.endDate);
-                if (!picker.cancelingClick && modelSet) {
-                  $scope.model = opts.singleDatePicker ? null : {
-                    startDate: null,
-                    endDate: null
-                  };
-                  el.val("");
-                }
-                picker.cancelingClick = null;
-                return $timeout(function() {
-                  return $scope.$apply(function () {
-                    var formatters, idx, viewValue;
-                    formatters = modelCtrl.$formatters;
-                    idx = formatters.length;
-                    viewValue = $scope.model;
-                    while (idx--) {
-                      viewValue = formatters[idx](viewValue);
-                    }
-                    modelCtrl.$viewValue = modelCtrl.$$lastCommittedViewValue = viewValue;
-                    modelCtrl.$modelValue = $scope.model;
-                    modelCtrl.$render();
-                    return modelCtrl.$$writeModelToScope();
-                  });
-                });
-              });
-            }
-          });
-        }
-        $scope.$watch('disabled', function (newDisabled) {
-          if (newDisabled) {
-            return el.on('show.daterangepicker', function (ev, picker) {
-              return _picker != null ? _picker.remove() : void 0;
-            });
-          } else {
-            return el.on('show.daterangepicker', function(ev, picker) {
-              el.addClass('picker-open');
-              return $scope.$apply(function() {
-                if (opts.singleDatePicker) {
-                  if (!picker.startDate.isSame($scope.model)) {
-                    _setStartDate($scope.model);
-                    _setEndDate($scope.model);
-                  }
-                } else {
-                  if ($scope.model && !picker.startDate.isSame($scope.model.startDate)) {
-                    _setStartDate($scope.model.startDate);
-                  }
-                  if ($scope.model && !picker.endDate.isSame($scope.model.endDate)) {
-                    _setEndDate($scope.model.endDate);
-                  }
-                }
-                picker.updateView();
-              });
-            });
-          }
-        });
         return $scope.$on('$destroy', function() {
           return _picker != null ? _picker.remove() : void 0;
         });
