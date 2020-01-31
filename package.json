@@ -13,7 +13,7 @@
   "private": false,
   "dependencies": {
     "angular": "^1.2.17",
-    "bootstrap-daterangepicker": "github:natejbaker/daterangepicker"
+    "bootstrap-daterangepicker": "github:natejbaker/daterangepicker#1bb10ffa50da8736fced03e9a31fee4dd42afc41"
   },
   "main": "index.js",
   "devDependencies": {
